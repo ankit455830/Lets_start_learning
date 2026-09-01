@@ -60,6 +60,7 @@ public class EmployeeService {
             existing.setFirstName(payload.getFirstName());
             existing.setLastName(payload.getLastName());
             existing.setEmail(payload.getEmail());
+            existing.setEmail("ankit@gmail.com");
             Employee updated = repo.save(existing);
             return ResponseEntity.ok(updated);
         }).orElseGet(() -> ResponseEntity.notFound().build());
