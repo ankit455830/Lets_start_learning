@@ -18,7 +18,7 @@ public class EmployeeService {
     public EmployeeService(EmployeeRepository repo) {
         this.repo = repo;
     }
-
+    //circuitBreaker
     @Retry(name = "employeeService", fallbackMethod = "defaultFallback")
     @CircuitBreaker(name = "employeeService", fallbackMethod = "defaultFallback")
     public List<Employee> getAll() {
