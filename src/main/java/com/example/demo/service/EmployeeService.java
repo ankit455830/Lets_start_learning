@@ -29,12 +29,10 @@ public class EmployeeService {
         return Collections.emptyList();
     }
 
-    @Retry(name = "employeeService", fallbackMethod = "defaultFallback")
-    @CircuitBreaker(name = "employeeService", fallbackMethod = "defaultFallback")
     public ResponseEntity<Employee> getById(Long id) {
         return repo.findById(id)
                 .map(ResponseEntity::ok)
-                .orElseGet(() -> ResponseEntity.notFound().build());
+                .orElseThrow(() -> new RuntimeException("Employee not found"));
     }
 
     // Single generic fallback for methods that take (Long id)
