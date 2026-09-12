@@ -1,4 +1,4 @@
-name: Spring Boot CI
+name: Spring Boot CI/CD
 
 on:
   push:
@@ -10,10 +10,14 @@ permissions:
 
 jobs:
 
-  test:
+  build-and-deploy:
     runs-on: ubuntu-latest
 
     steps:
+
+      # =========================
+      # CI
+      # =========================
 
       - name: Checkout code
         uses: actions/checkout@v4
@@ -31,11 +35,19 @@ jobs:
       - name: Build application
         run: ./mvnw clean package -DskipTests
 
+      # =========================
+      # AWS Authentication
+      # =========================
+
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: arn:aws:iam::323979376873:role/github-actions-ecr-role
           aws-region: ap-south-1
+
+      # =========================
+      # Build & Push Docker Image
+      # =========================
 
       - name: Login to Amazon ECR
         id: login-ecr
@@ -50,3 +62,31 @@ jobs:
         run: |
           docker push \
             ${{ steps.login-ecr.outputs.registry }}/springboot-crud:${{ github.sha }}
+
+      # =========================
+      # CD → EKS
+      # Only main branch
+      # =========================
+
+      - name: Configure kubectl for EKS
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        run: |
+          aws eks update-kubeconfig \
+            --region ap-south-1 \
+            --name springboot-cluster
+
+      - name: Update Kubernetes deployment image
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        run: |
+          sed -i "s|image:.*|image: ${{ steps.login-ecr.outputs.registry }}/springboot-crud:${{ github.sha }}|" \
+            k8s/springboot-deployment.yml
+
+      - name: Deploy Kubernetes manifest
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        run: |
+          kubectl apply -f k8s/springboot-deployment.yml
+
+      - name: Verify deployment
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        run: |
+          kubectl rollout status deployment/springboot-app
