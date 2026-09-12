@@ -65,28 +65,28 @@ jobs:
 
       # =========================
       # CD → EKS
-      # Only main branch
+      # Only master branch
       # =========================
 
       - name: Configure kubectl for EKS
-        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        if: github.ref == 'refs/heads/master' && github.event_name == 'push'
         run: |
           aws eks update-kubeconfig \
             --region ap-south-1 \
             --name springboot-cluster
 
       - name: Update Kubernetes deployment image
-        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        if: github.ref == 'refs/heads/master' && github.event_name == 'push'
         run: |
           sed -i "s|image:.*|image: ${{ steps.login-ecr.outputs.registry }}/springboot-crud:${{ github.sha }}|" \
             k8s/springboot-deployment.yml
 
       - name: Deploy Kubernetes manifest
-        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        if: github.ref == 'refs/heads/master' && github.event_name == 'push'
         run: |
           kubectl apply -f k8s/springboot-deployment.yml
 
       - name: Verify deployment
-        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        if: github.ref == 'refs/heads/master' && github.event_name == 'push'
         run: |
           kubectl rollout status deployment/springboot-app
