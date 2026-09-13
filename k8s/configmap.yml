@@ -3,4 +3,4 @@ kind: ConfigMap
 metadata:
   name: springboot-config
 data:
-  DB_URL: jdbc:postgresql://postgres:5432/demo_db
+  DB_URL: jdbc:postgresql://demodb1.cxeeucco4xnb.ap-south-1.rds.amazonaws.com:5432/demodb1
